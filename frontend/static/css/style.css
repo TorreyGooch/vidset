@@ -669,7 +669,15 @@ video {
 .fps-label { font-size: 11px; color: var(--muted); margin-left: auto; }
 
 /* ── Keyframe list ─────────────────────────────────────────────────────────── */
-.keyframe-list { margin-top: 4px; }
+.keyframe-list {
+  margin-top: 4px;
+  max-height: 240px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 4px;
+  background: var(--bg);
+}
 
 .keyframe-entry {
   display: flex;
