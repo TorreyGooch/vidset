@@ -6,6 +6,7 @@ const Split = {
   detectedSegments: [],    // { start, end, duration, checked } — auto mode
   fps: 30,
   minDuration: 1.5,
+  loopClip: null,          // { start, end } of clip selected for looping
 
   async load() {
     try {
@@ -35,6 +36,7 @@ const Split = {
     this.keyframes = [];
     this.detectedSegments = [];
     this.fps = 30;
+    this.loopClip = null;
     this.renderSourceList();
     this.renderVideo();
     this.renderManualView();
@@ -56,7 +58,12 @@ const Split = {
     if (!vid || !this.selectedSource) return;
     vid.src = `/api/projects/${App.projectId}/media/source/${encodeURIComponent(this.selectedSource.filename)}`;
     vid.load();
-    vid.ontimeupdate = () => this.updateTimeDisplay();
+    vid.ontimeupdate = () => {
+      this.updateTimeDisplay();
+      if (this.loopClip && vid.currentTime >= this.loopClip.end) {
+        vid.currentTime = this.loopClip.start;
+      }
+    };
   },
 
   updateTimeDisplay() {
@@ -79,7 +86,29 @@ const Split = {
   },
 
   removeKeyframe(idx) {
+    const removed = this.keyframes[idx];
+    if (this.loopClip && Math.abs(this.loopClip.start - removed) < 0.001) {
+      this.loopClip = null;
+    }
     this.keyframes.splice(idx, 1);
+    this.renderManualView();
+  },
+
+  selectLoop(idx) {
+    const start = this.keyframes[idx];
+    const end = this.keyframes[idx + 1];
+    if (start === undefined || end === undefined) return;
+    // Toggle off if already looping this clip
+    if (this.loopClip && Math.abs(this.loopClip.start - start) < 0.001) {
+      this.loopClip = null;
+    } else {
+      this.loopClip = { start, end };
+      const vid = document.getElementById('split-video');
+      if (vid) {
+        vid.currentTime = start;
+        vid.play();
+      }
+    }
     this.renderManualView();
   },
 
@@ -99,6 +128,7 @@ const Split = {
     if (this.keyframes.length === 0) return;
     if (!confirm('Clear all keyframes?')) return;
     this.keyframes = [];
+    this.loopClip = null;
     this.renderManualView();
   },
 
