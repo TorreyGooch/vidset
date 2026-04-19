@@ -679,39 +679,46 @@ video {
   background: var(--bg);
 }
 
-.keyframe-entry {
+.keyframe-row {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 10px;
-  background: var(--surface2);
-  border: 1px solid var(--border);
+  gap: 6px;
+  padding: 4px 6px;
   border-radius: var(--radius);
   cursor: pointer;
-  transition: border-color .12s;
+  border: 1px solid transparent;
+  transition: background .12s, border-color .12s;
 }
-.keyframe-entry:hover { border-color: var(--accent); }
+.keyframe-row:hover { background: var(--surface2); }
+.keyframe-row.loop-active { background: var(--accent-dim); border-color: var(--accent); }
 
 .kf-num {
   font-size: 11px;
   color: var(--muted);
-  min-width: 22px;
+  min-width: 18px;
   text-align: right;
+  flex-shrink: 0;
 }
-.kf-time { font-family: monospace; font-size: 13px; flex: 1; }
-
-.clip-bridge {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 3px 12px 3px 36px;
-  color: var(--muted);
+.kf-time {
+  font-family: monospace;
   font-size: 12px;
-  border-left: 2px solid var(--border);
-  margin: 1px 0 1px 14px;
+  min-width: 68px;
+  flex-shrink: 0;
 }
-.clip-bridge .bridge-label { color: var(--muted); }
-.clip-bridge .bridge-dur { color: var(--accent); font-weight: 600; font-family: monospace; }
+.kf-clip-pill {
+  flex: 1;
+  font-size: 11px;
+  color: var(--accent);
+  background: var(--accent-dim);
+  border-radius: 10px;
+  padding: 1px 8px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: opacity .12s;
+}
+.kf-clip-pill:hover { opacity: .75; }
+.kf-clip-pill.warn { color: var(--orange); background: var(--orange-dim); }
+.kf-no-clip { flex: 1; }
 
 /* ── Export page ───────────────────────────────────────────────────────────── */
 .export-summary {

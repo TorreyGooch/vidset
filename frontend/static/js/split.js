@@ -115,23 +115,26 @@ const Split = {
 
     let html = '<div class="keyframe-list">';
     this.keyframes.forEach((t, i) => {
+      const hasClip = i < this.keyframes.length - 1;
+      const dur = hasClip ? this.keyframes[i + 1] - t : null;
+      const short = dur !== null && dur < this.minDuration;
+      const looping = this.loopClip && Math.abs(this.loopClip.start - t) < 0.001;
+
+      let clipPill = '<span class="kf-no-clip"></span>';
+      if (hasClip) {
+        const label = `Clip ${i + 1} · ${fmtDuration(dur)}${short ? ' ⚠' : ''}`;
+        clipPill = `<span class="kf-clip-pill${short ? ' warn' : ''}"
+          onclick="event.stopPropagation(); Split.selectLoop(${i})">${label}</span>`;
+      }
+
       html += `
-        <div class="keyframe-entry" onclick="Split.seekToKeyframe(${t})">
+        <div class="keyframe-row${looping ? ' loop-active' : ''}" onclick="Split.seekToKeyframe(${t})">
           <span class="kf-num">${i + 1}</span>
           <span class="kf-time">${fmtPrecise(t)}</span>
-          <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();Split.removeKeyframe(${i})">✕</button>
+          ${clipPill}
+          <button class="btn btn-ghost btn-sm" style="flex-shrink:0"
+            onclick="event.stopPropagation();Split.removeKeyframe(${i})">✕</button>
         </div>`;
-
-      if (i < this.keyframes.length - 1) {
-        const dur = this.keyframes[i + 1] - t;
-        const warn = dur < this.minDuration ? '<span style="color:var(--orange)">⚠ short</span>' : '';
-        html += `
-          <div class="clip-bridge">
-            <span class="bridge-label">Clip ${i + 1}</span>
-            <span class="bridge-dur">${fmtDuration(dur)}</span>
-            ${warn}
-          </div>`;
-      }
     });
     html += '</div>';
 
