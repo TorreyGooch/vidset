@@ -3,6 +3,7 @@ const Split = {
   selectedSource: null,
   mode: 'manual',
   keyframes: [],           // sorted timestamps (seconds) — manual mode
+  keyframeImages: {},      // timestamp -> data URL, captured at mark time
   detectedSegments: [],    // { start, end, duration, checked } — auto mode
   fps: 30,
   minDuration: 1.5,
@@ -34,9 +35,11 @@ const Split = {
   async selectSource(sid) {
     this.selectedSource = this.sources.find(s => s.id === sid) || null;
     this.keyframes = [];
+    this.keyframeImages = {};
     this.detectedSegments = [];
     this.fps = 30;
     this.loopClip = null;
+    this._clearPreview();
     this.renderSourceList();
     this.renderVideo();
     this.renderManualView();
@@ -60,6 +63,7 @@ const Split = {
     vid.load();
     vid.ontimeupdate = () => {
       this.updateTimeDisplay();
+      this.updateKeyframePreview(vid.currentTime);
       if (this.loopClip && vid.currentTime >= this.loopClip.end) {
         vid.currentTime = this.loopClip.start;
       }
@@ -84,6 +88,16 @@ const Split = {
     if (!vid || !this.selectedSource) { toast('Select a source first', 'error'); return; }
     const t = parseFloat(vid.currentTime.toFixed(6));
     if (this.keyframes.some(k => Math.abs(k - t) < 0.001)) return; // dedupe
+
+    // Capture current frame into keyframeImages before adding to list
+    try {
+      const canvas = document.createElement('canvas');
+      canvas.width = vid.videoWidth || 640;
+      canvas.height = vid.videoHeight || 360;
+      canvas.getContext('2d').drawImage(vid, 0, 0, canvas.width, canvas.height);
+      this.keyframeImages[t] = canvas.toDataURL('image/jpeg', 0.85);
+    } catch (e) { /* cross-origin or decode not ready — skip capture */ }
+
     this.keyframes.push(t);
     this.keyframes.sort((a, b) => a - b);
     this.renderManualView();
@@ -94,8 +108,45 @@ const Split = {
     if (this.loopClip && Math.abs(this.loopClip.start - removed) < 0.001) {
       this.loopClip = null;
     }
+    delete this.keyframeImages[removed];
     this.keyframes.splice(idx, 1);
     this.renderManualView();
+  },
+
+  // Find the keyframe at or just before currentTime and show its captured still.
+  updateKeyframePreview(currentTime) {
+    let refT = null;
+    for (const t of this.keyframes) {
+      if (t <= currentTime + 0.001) refT = t;
+      else break;
+    }
+
+    const img = document.getElementById('kf-preview-img');
+    const empty = document.getElementById('kf-preview-empty');
+    const info = document.getElementById('kf-preview-info');
+    if (!img) return;
+
+    const dataUrl = refT !== null ? this.keyframeImages[refT] : null;
+    if (dataUrl) {
+      img.src = dataUrl;
+      img.classList.add('visible');
+      if (empty) empty.style.display = 'none';
+      const kfIdx = this.keyframes.indexOf(refT);
+      if (info) info.textContent = `Keyframe ${kfIdx + 1} · f ${this.toFrame(refT)}`;
+    } else {
+      img.classList.remove('visible');
+      if (empty) empty.style.display = 'flex';
+      if (info) info.textContent = '';
+    }
+  },
+
+  _clearPreview() {
+    const img = document.getElementById('kf-preview-img');
+    const empty = document.getElementById('kf-preview-empty');
+    const info = document.getElementById('kf-preview-info');
+    if (img) { img.classList.remove('visible'); img.src = ''; }
+    if (empty) empty.style.display = 'flex';
+    if (info) info.textContent = '';
   },
 
   selectLoop(idx) {
@@ -132,7 +183,9 @@ const Split = {
     if (this.keyframes.length === 0) return;
     if (!confirm('Clear all keyframes?')) return;
     this.keyframes = [];
+    this.keyframeImages = {};
     this.loopClip = null;
+    this._clearPreview();
     this.renderManualView();
   },
 

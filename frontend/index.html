@@ -145,8 +145,21 @@
           <!-- Split editor -->
           <div class="split-main">
 
-            <!-- Video preview -->
-            <video id="split-video" controls style="margin-bottom:14px;background:#000;max-height:280px"></video>
+            <!-- Side-by-side: previous keyframe still | live video -->
+            <div class="split-compare">
+              <div class="split-compare-panel">
+                <div class="panel-label">Start frame</div>
+                <div class="kf-still-area">
+                  <img id="kf-preview-img" alt="keyframe">
+                  <div id="kf-preview-empty" class="kf-still-empty">Mark first keyframe</div>
+                </div>
+                <div id="kf-preview-info" class="still-info"></div>
+              </div>
+              <div class="split-compare-panel">
+                <div class="panel-label">Current position</div>
+                <video id="split-video" controls></video>
+              </div>
+            </div>
 
             <!-- Mode tabs -->
             <div class="tab-bar">

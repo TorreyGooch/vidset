@@ -626,6 +626,75 @@ video {
   flex-shrink: 0;
 }
 
+/* ── Split compare view ────────────────────────────────────────────────────── */
+.split-compare {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.split-compare-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.panel-label {
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+
+.kf-still-area {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  background: #000;
+  border-radius: var(--radius);
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+.kf-still-area img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: none;
+}
+.kf-still-area img.visible { display: block; }
+
+.kf-still-empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  font-size: 12px;
+  text-align: center;
+  padding: 8px;
+}
+
+.still-info {
+  font-size: 11px;
+  color: var(--muted);
+  font-family: monospace;
+  min-height: 15px;
+}
+
+#split-video {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #000;
+  border-radius: var(--radius);
+  display: block;
+  border: 1px solid var(--border);
+}
+
 /* ── Frame navigation ──────────────────────────────────────────────────────── */
 .frame-nav {
   display: flex;
