@@ -66,11 +66,15 @@ const Split = {
     };
   },
 
+  toFrame(t) {
+    return Math.round(t * this.fps);
+  },
+
   updateTimeDisplay() {
     const vid = document.getElementById('split-video');
     if (!vid) return;
     const el = document.getElementById('frame-time-display');
-    if (el) el.textContent = fmtPrecise(vid.currentTime);
+    if (el) el.textContent = `f ${this.toFrame(vid.currentTime)}`;
   },
 
   // ── Keyframe (manual) mode ────────────────────────────────────────────────
@@ -152,7 +156,8 @@ const Split = {
 
       let clipPill = '<span class="kf-no-clip"></span>';
       if (hasClip) {
-        const label = `Clip ${i + 1} · ${fmtDuration(dur)}${short ? ' ⚠' : ''}`;
+        const frameCount = this.toFrame(dur);
+        const label = `Clip ${i + 1} · ${fmtDuration(dur)} · ${frameCount}f${short ? ' ⚠' : ''}`;
         clipPill = `<span class="kf-clip-pill${short ? ' warn' : ''}"
           onclick="event.stopPropagation(); Split.selectLoop(${i})">${label}</span>`;
       }
@@ -160,7 +165,7 @@ const Split = {
       html += `
         <div class="keyframe-row${looping ? ' loop-active' : ''}" onclick="Split.seekToKeyframe(${t})">
           <span class="kf-num">${i + 1}</span>
-          <span class="kf-time">${fmtPrecise(t)}</span>
+          <span class="kf-time" title="${fmtPrecise(t)}">f ${this.toFrame(t)}</span>
           ${clipPill}
           <button class="btn btn-ghost btn-sm" style="flex-shrink:0"
             onclick="event.stopPropagation();Split.removeKeyframe(${i})">✕</button>
