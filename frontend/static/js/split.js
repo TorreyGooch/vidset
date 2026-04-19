@@ -267,18 +267,19 @@ const Split = {
 };
 
 // ── Keyboard handler ──────────────────────────────────────────────────────────
+// Capture phase so we intercept arrow keys before the video element handles them.
 
 document.addEventListener('keydown', e => {
   if (App.currentPage !== 'split') return;
   if (['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) return;
 
-  if (e.key === 'm' || e.key === 'M') {
+  if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+    // Always intercept arrows on the split page — prevent browser video seek
+    e.preventDefault();
+    e.stopPropagation();
+    const forward = e.key === 'ArrowRight';
+    Split.stepFrames(forward ? (e.shiftKey ? 10 : 1) : (e.shiftKey ? -10 : -1));
+  } else if (e.key === 'm' || e.key === 'M') {
     Split.markKeyframe();
-  } else if (e.key === 'ArrowRight') {
-    e.preventDefault();
-    Split.stepFrames(e.shiftKey ? 10 : 1);
-  } else if (e.key === 'ArrowLeft') {
-    e.preventDefault();
-    Split.stepFrames(e.shiftKey ? -10 : -1);
   }
-});
+}, { capture: true });

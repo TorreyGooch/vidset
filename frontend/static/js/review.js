@@ -166,6 +166,23 @@ const Review = {
     this.renderBatchBar();
   },
 
+  async batchDelete() {
+    const count = this.selected.size;
+    if (count === 0) return;
+    if (!confirm(`Delete ${count} clip${count !== 1 ? 's' : ''}? This cannot be undone.`)) return;
+    const ids = [...this.selected];
+    let failed = 0;
+    for (const id of ids) {
+      try {
+        await papi(`/clips/${id}`, { method: 'DELETE' });
+      } catch { failed++; }
+    }
+    this.selected.clear();
+    if (this.focusedId && ids.includes(this.focusedId)) this.closeDetail();
+    await this.refresh();
+    toast(failed ? `Deleted ${ids.length - failed}, ${failed} failed` : `Deleted ${ids.length} clips`);
+  },
+
   // ── Detail panel ──────────────────────────────────────────────────────────
 
   async openDetail(clip) {
