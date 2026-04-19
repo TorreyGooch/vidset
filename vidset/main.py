@@ -16,7 +16,7 @@ from .project import (
 from .api.download import download_url, import_local
 from .api.split import (
     extract_clip, generate_thumbnail, detect_scenes,
-    get_duration, ffmpeg_available,
+    get_duration, get_fps, ffmpeg_available,
 )
 
 TOOL_DIR = Path(__file__).parent.parent
@@ -214,6 +214,20 @@ def list_clips(pid: str, status: Optional[str] = None):
         c["concept_name"] = src.get("concept_name", "")
         c["source_title"] = src.get("title", "")
     return clips
+
+
+@app.get("/api/projects/{pid}/sources/{sid}/fps")
+async def source_fps(pid: str, sid: str):
+    root = _get_root(pid)
+    project = load_project(root)
+    src = _find(project["sources"], sid)
+    if not src:
+        raise HTTPException(404)
+    vpath = root / "source" / src["filename"]
+    if not vpath.exists():
+        raise HTTPException(404)
+    fps = await get_fps(vpath)
+    return {"fps": fps}
 
 
 @app.get("/api/projects/{pid}/sources/{sid}/duration")

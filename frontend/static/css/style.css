@@ -626,6 +626,85 @@ video {
   flex-shrink: 0;
 }
 
+/* ── Frame navigation ──────────────────────────────────────────────────────── */
+.frame-nav {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 8px 10px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.frame-nav .time-display {
+  font-family: monospace;
+  font-size: 14px;
+  color: var(--text);
+  min-width: 96px;
+  text-align: center;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 3px 8px;
+}
+
+.btn-frame {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: var(--radius);
+  padding: 4px 10px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: border-color .15s;
+  white-space: nowrap;
+}
+.btn-frame:hover { border-color: var(--accent); color: var(--accent); }
+.btn-frame.mark { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+.btn-frame.mark:hover { opacity: .85; }
+
+.fps-label { font-size: 11px; color: var(--muted); margin-left: auto; }
+
+/* ── Keyframe list ─────────────────────────────────────────────────────────── */
+.keyframe-list { margin-top: 4px; }
+
+.keyframe-entry {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: border-color .12s;
+}
+.keyframe-entry:hover { border-color: var(--accent); }
+
+.kf-num {
+  font-size: 11px;
+  color: var(--muted);
+  min-width: 22px;
+  text-align: right;
+}
+.kf-time { font-family: monospace; font-size: 13px; flex: 1; }
+
+.clip-bridge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 3px 12px 3px 36px;
+  color: var(--muted);
+  font-size: 12px;
+  border-left: 2px solid var(--border);
+  margin: 1px 0 1px 14px;
+}
+.clip-bridge .bridge-label { color: var(--muted); }
+.clip-bridge .bridge-dur { color: var(--accent); font-weight: 600; font-family: monospace; }
+
 /* ── Export page ───────────────────────────────────────────────────────────── */
 .export-summary {
   background: var(--surface2);

@@ -61,6 +61,29 @@ async def generate_thumbnail(video_path: Path, thumb_path: Path, time: float = 0
     return thumb_path.exists()
 
 
+async def get_fps(video_path: Path) -> float:
+    cmd = [
+        "ffprobe", "-v", "quiet", "-print_format", "json",
+        "-show_streams", "-select_streams", "v:0", str(video_path),
+    ]
+    proc = await asyncio.create_subprocess_exec(
+        *cmd,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+    out, _ = await proc.communicate()
+    try:
+        data = json.loads(out)
+        streams = data.get("streams", [])
+        if streams:
+            r = streams[0].get("r_frame_rate", "30/1")
+            num, den = r.split("/")
+            return round(float(num) / float(den), 6)
+    except Exception:
+        pass
+    return 30.0
+
+
 async def detect_scenes(video_path: Path, threshold: float = 27.0) -> list[dict]:
     loop = asyncio.get_event_loop()
 

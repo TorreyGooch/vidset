@@ -140,6 +140,12 @@ function fmtTimecode(s) {
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${sec}`;
 }
 
+function fmtPrecise(s) {
+  const m = Math.floor(s / 60);
+  const sec = (s % 60).toFixed(3).padStart(6, '0');
+  return `${String(m).padStart(2, '0')}:${sec}`;
+}
+
 // ── Project creation / open forms ─────────────────────────────────────────────
 
 async function createProject() {
