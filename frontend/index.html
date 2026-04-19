@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VIDSET</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+<!-- ── Project selector overlay ─────────────────────────────────────────────── -->
+<div id="project-overlay" class="hidden">
+  <div class="overlay-box">
+    <h1>VIDSET</h1>
+    <p class="subtitle">Video LORA Dataset Tool</p>
+
+    <div class="project-list">
+      <h3>Recent Projects</h3>
+      <div id="recent-projects"></div>
+    </div>
+
+    <hr class="divider">
+
+    <div style="margin-bottom:20px">
+      <h3 style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:12px">New Project</h3>
+      <div class="form-group">
+        <label>Project Name</label>
+        <input type="text" id="new-proj-name" placeholder="My LORA Dataset">
+      </div>
+      <div class="form-group">
+        <label>Folder Path</label>
+        <input type="text" id="new-proj-path" placeholder="C:\Users\you\datasets\my-project">
+      </div>
+      <button class="btn btn-primary" onclick="createProject()">Create Project</button>
+    </div>
+
+    <hr class="divider">
+
+    <div>
+      <h3 style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:12px">Open Existing</h3>
+      <div class="form-group">
+        <label>Project Folder Path</label>
+        <input type="text" id="open-proj-path" placeholder="C:\Users\you\datasets\existing-project">
+      </div>
+      <button class="btn btn-ghost" onclick="openExistingProject()">Open Project</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Main app ──────────────────────────────────────────────────────────────── -->
+<div id="app" class="hidden">
+
+  <!-- Sidebar -->
+  <nav id="sidebar">
+    <div class="sidebar-header">
+      <div class="app-title">VIDSET</div>
+      <div class="proj-label" id="sidebar-proj-name">No project</div>
+    </div>
+    <ul class="sidebar-nav">
+      <li data-page="download">⬇ Download</li>
+      <li data-page="split">✂ Split</li>
+      <li data-page="review">✎ Review</li>
+      <li data-page="export">📦 Export</li>
+    </ul>
+    <div class="sidebar-footer">
+      <button class="btn btn-ghost btn-sm" onclick="App.switchProject()" style="width:100%">Switch Project</button>
+    </div>
+  </nav>
+
+  <!-- Content -->
+  <main id="content">
+
+    <!-- ── Download page ──────────────────────────────────────────────────── -->
+    <div id="page-download" class="page">
+      <div class="page-header">
+        <h2>Download / Import</h2>
+      </div>
+      <div class="page-body">
+
+        <div class="section-card">
+          <h3>Download from URL</h3>
+          <div class="form-group">
+            <label>URL (YouTube, Vimeo, etc.)</label>
+            <input type="text" id="dl-url" placeholder="https://www.youtube.com/watch?v=...">
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+            <div class="form-group" style="margin:0">
+              <label>Start Time (optional)</label>
+              <input type="text" id="dl-start" placeholder="0:00 or 1:23:45">
+            </div>
+            <div class="form-group" style="margin:0">
+              <label>End Time (optional)</label>
+              <input type="text" id="dl-end" placeholder="0:30 or 1:25:00">
+            </div>
+          </div>
+          <button class="btn btn-primary" id="dl-btn" onclick="Download.downloadUrl()">Download</button>
+          <p style="font-size:12px;color:var(--muted);margin-top:8px">Best quality MP4. Trimmed range downloads only the specified segment — no full-file intermediates.</p>
+        </div>
+
+        <div class="section-card">
+          <h3>Import from Hard Drive</h3>
+          <div id="drop-zone" class="drop-zone">
+            <div style="font-size:24px;margin-bottom:8px">📁</div>
+            <div>Click to browse or drag video files here</div>
+            <div style="font-size:12px;margin-top:4px">MP4, MOV, MKV, AVI…</div>
+            <input type="file" id="file-input" multiple accept="video/*">
+          </div>
+        </div>
+
+        <div class="section-card">
+          <h3>Source Files</h3>
+          <table class="source-table">
+            <thead>
+              <tr>
+                <th>Filename</th>
+                <th>Concept Name</th>
+                <th>Source</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="source-tbody">
+              <tr><td colspan="4" style="color:var(--muted);text-align:center;padding:20px">No source files yet</td></tr>
+            </tbody>
+          </table>
+          <p style="font-size:12px;color:var(--muted);margin-top:8px">Concept Name is auto-set from the video title. Edit it here — it becomes the per-video identifier in your exported captions.</p>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── Split page ─────────────────────────────────────────────────────── -->
+    <div id="page-split" class="page">
+      <div class="page-header">
+        <h2>Split</h2>
+      </div>
+      <div class="page-body" style="padding:0;overflow:hidden;height:100%">
+        <div class="split-layout" style="padding:16px;height:100%">
+
+          <!-- Source selector -->
+          <div class="split-sidebar">
+            <h3 style="font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:10px">Sources</h3>
+            <div id="split-source-list"></div>
+          </div>
+
+          <!-- Split editor -->
+          <div class="split-main">
+
+            <!-- Video preview -->
+            <video id="split-video" controls style="margin-bottom:14px;background:#000;max-height:280px"></video>
+
+            <!-- Mode tabs -->
+            <div class="tab-bar">
+              <button class="tab-btn active" data-mode="manual" onclick="Split.setMode('manual')">Manual</button>
+              <button class="tab-btn" data-mode="auto" onclick="Split.setMode('auto')">Auto-detect</button>
+            </div>
+
+            <!-- Manual controls -->
+            <div id="manual-controls">
+              <div class="timecode-row">
+                <div class="form-group" style="margin:0">
+                  <label>Start (seconds)</label>
+                  <input type="number" id="seg-start" step="0.01" min="0" placeholder="0.00">
+                </div>
+                <div class="form-group" style="margin:0">
+                  <label>End (seconds)</label>
+                  <input type="number" id="seg-end" step="0.01" min="0" placeholder="0.00">
+                </div>
+                <div style="padding-top:18px">
+                  <button class="btn btn-ghost btn-sm" onclick="Split.setStartFromVideo()">← Set Start</button>
+                </div>
+              </div>
+              <div class="btn-row" style="margin-bottom:12px">
+                <button class="btn btn-ghost btn-sm" onclick="Split.setEndFromVideo()">← Set End from Video</button>
+                <button class="btn btn-primary btn-sm" onclick="Split.addManualSegment()">Add Segment</button>
+              </div>
+            </div>
+
+            <!-- Auto controls -->
+            <div id="auto-controls" class="hidden">
+              <div class="form-group">
+                <label>Detection Threshold (lower = more cuts, higher = fewer)</label>
+                <input type="range" id="detect-threshold" min="5" max="60" value="27" step="1"
+                  oninput="document.getElementById('detect-threshold-val').textContent = this.value">
+                <div style="font-size:12px;color:var(--muted);margin-top:4px">Value: <span id="detect-threshold-val">27</span></div>
+              </div>
+              <button class="btn btn-primary btn-sm" id="detect-btn" onclick="Split.detectScenes()">Detect Scenes</button>
+            </div>
+
+            <!-- Segments list -->
+            <div style="display:flex;align-items:center;justify-content:space-between;margin:12px 0 6px">
+              <strong style="font-size:13px">Segments</strong>
+              <div style="display:flex;gap:6px">
+                <button class="btn btn-ghost btn-sm" onclick="Split.selectAll(true)">All</button>
+                <button class="btn btn-ghost btn-sm" onclick="Split.selectAll(false)">None</button>
+              </div>
+            </div>
+            <div id="segment-list" class="segment-list"></div>
+
+            <div class="btn-row" style="margin-top:14px">
+              <button class="btn btn-success" id="extract-btn" onclick="Split.extractSelected()">Extract Selected</button>
+            </div>
+            <p style="font-size:12px;color:var(--muted);margin-top:8px">Clips under 1.5s are automatically flagged for review.</p>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Review page ────────────────────────────────────────────────────── -->
+    <div id="page-review" class="page">
+      <div class="review-layout" style="height:100%">
+
+        <!-- Grid area -->
+        <div class="review-grid-area">
+          <div class="review-toolbar">
+            <span style="font-size:12px;color:var(--muted)">Filter:</span>
+            <button class="filter-btn active-all" data-filter="all" onclick="Review.setFilter('all')">All</button>
+            <button class="filter-btn" data-filter="unreviewed" onclick="Review.setFilter('unreviewed')">Unreviewed</button>
+            <button class="filter-btn" data-filter="approved" onclick="Review.setFilter('approved')">Approved</button>
+            <button class="filter-btn" data-filter="flagged" onclick="Review.setFilter('flagged')">Flagged</button>
+            <span class="review-stats" id="review-stats"></span>
+          </div>
+
+          <!-- Batch bar (hidden when nothing selected) -->
+          <div class="batch-bar hidden" id="batch-bar">
+            <span class="sel-count" id="batch-sel-count">0 selected</span>
+            <input type="text" id="batch-tag-input" placeholder="tag name…" style="width:160px">
+            <button class="btn btn-primary btn-sm" onclick="Review.applyBatchTag()">+ Tag</button>
+            <button class="btn btn-ghost btn-sm" onclick="Review.applyBatchRemoveTag()">− Tag</button>
+            <button class="btn btn-success btn-sm" onclick="Review.applyBatchStatus('approved')">Approve All</button>
+            <button class="btn btn-warning btn-sm" onclick="Review.applyBatchStatus('flagged')">Flag All</button>
+            <button class="btn btn-ghost btn-sm" onclick="Review.clearSelection()">✕ Clear</button>
+          </div>
+
+          <div class="thumb-grid" id="thumb-grid"></div>
+        </div>
+
+        <!-- Detail panel -->
+        <div class="review-detail">
+          <div class="detail-empty" id="detail-empty">
+            Click a clip to review it<br>
+            <span style="font-size:11px;margin-top:6px;display:block">Ctrl+click or Shift+click to multi-select</span>
+            <span style="font-size:11px;margin-top:4px;display:block">Keys: ← → navigate · A approve · F flag · U unreviewed</span>
+          </div>
+
+          <div class="detail-content hidden" id="detail-content">
+
+            <div class="detail-video">
+              <video id="detail-video" controls style="max-height:220px"></video>
+            </div>
+
+            <div class="detail-meta">
+              <strong id="detail-clip-id">—</strong>
+              &nbsp;·&nbsp;<span id="detail-duration">—</span>
+              &nbsp;·&nbsp;<span id="detail-status-badge" class="badge badge-unreviewed">unreviewed</span>
+            </div>
+
+            <div class="detail-meta">
+              Concept: <strong id="detail-concept">—</strong>
+            </div>
+
+            <!-- Tags -->
+            <div>
+              <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Tags</div>
+              <div class="tag-list" id="detail-tags"></div>
+              <div class="add-tag-row" style="margin-top:8px">
+                <input type="text" id="add-tag-input" placeholder="Add tag…">
+                <button class="btn btn-ghost btn-sm" onclick="Review.addDetailTag()">Add</button>
+              </div>
+            </div>
+
+            <!-- Caption -->
+            <div class="caption-area">
+              <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">
+                Caption
+                <span style="font-size:10px;color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0"> · Ctrl+Enter to save</span>
+              </div>
+              <textarea id="caption-editor" rows="5" placeholder="Write caption here…"></textarea>
+              <div class="caption-word-count" id="caption-word-count">0 words</div>
+              <button class="btn btn-ghost btn-sm" style="margin-top:6px" onclick="Review.saveCaption()">Save Caption</button>
+            </div>
+
+          </div>
+
+          <!-- Detail action buttons -->
+          <div class="detail-actions" id="detail-actions">
+            <button class="btn btn-success btn-sm" onclick="Review.setDetailStatus('approved')">✓ Approve</button>
+            <button class="btn btn-warning btn-sm" onclick="Review.setDetailStatus('flagged')">⚑ Flag</button>
+            <button class="btn btn-ghost btn-sm" onclick="Review.setDetailStatus('unreviewed')">↺ Unreviewed</button>
+            <button class="btn btn-danger btn-sm" style="margin-left:auto" onclick="Review.deleteDetailClip()">Delete</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── Export page ────────────────────────────────────────────────────── -->
+    <div id="page-export" class="page">
+      <div class="page-header">
+        <h2>Export</h2>
+      </div>
+      <div class="page-body">
+
+        <!-- Trigger word -->
+        <div class="section-card">
+          <h3>Global Trigger Word</h3>
+          <div style="display:flex;gap:8px;align-items:flex-end">
+            <div class="form-group" style="flex:1;margin:0">
+              <label>Prepended to all exported captions</label>
+              <input type="text" id="trigger-word-input" placeholder="mymodel style">
+            </div>
+            <button class="btn btn-ghost btn-sm" onclick="Export.saveTriggerWord()">Save</button>
+          </div>
+          <p style="font-size:12px;color:var(--muted);margin-top:8px">
+            Export format: <code>trigger_word, concept_name, tag1, tag2, caption text</code>
+          </p>
+        </div>
+
+        <!-- Dataset summary -->
+        <div class="section-card">
+          <h3>Dataset Summary</h3>
+          <div class="export-summary">
+            <div class="export-stat">
+              <div class="label">Approved</div>
+              <div class="value" id="exp-stat-approved">—</div>
+            </div>
+            <div class="export-stat">
+              <div class="label">Flagged</div>
+              <div class="value" id="exp-stat-flagged">—</div>
+            </div>
+            <div class="export-stat">
+              <div class="label">Unreviewed</div>
+              <div class="value" id="exp-stat-unreviewed">—</div>
+            </div>
+            <div class="export-stat">
+              <div class="label">Captioned</div>
+              <div class="value" id="exp-stat-captioned">—</div>
+            </div>
+            <div class="export-stat">
+              <div class="label">Approved Duration</div>
+              <div class="value" style="font-size:18px" id="exp-stat-duration">—</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Run export -->
+        <div class="section-card">
+          <h3>Run Export</h3>
+          <div style="display:grid;grid-template-columns:1fr auto;gap:12px;align-items:flex-end;margin-bottom:12px">
+            <div class="form-group" style="margin:0">
+              <label>Export Name</label>
+              <input type="text" id="export-name" placeholder="v1" value="v1">
+            </div>
+          </div>
+          <label style="display:flex;align-items:center;gap:8px;margin-bottom:14px;cursor:pointer;font-size:13px">
+            <input type="checkbox" id="export-approved-only" checked style="accent-color:var(--accent)">
+            Export approved clips only (uncheck to include all)
+          </label>
+          <button class="btn btn-success" id="export-btn" onclick="Export.runExport()">Run Export</button>
+          <p style="font-size:12px;color:var(--muted);margin-top:8px">Output: <code>export/&lt;name&gt;/clip_NNNN.mp4 + clip_NNNN.txt</code> pairs. Non-destructive — source files are copied, not moved.</p>
+        </div>
+
+        <!-- Export history -->
+        <div class="export-history">
+          <h3>Export History</h3>
+          <div id="export-history-list"></div>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<div id="toast-container"></div>
+
+<script src="/static/js/app.js"></script>
+<script src="/static/js/download.js"></script>
+<script src="/static/js/split.js"></script>
+<script src="/static/js/review.js"></script>
+<script src="/static/js/export.js"></script>
+</body>
+</html>
