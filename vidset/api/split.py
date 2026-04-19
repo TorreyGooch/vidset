@@ -24,13 +24,18 @@ async def get_duration(video_path: Path) -> float:
 
 
 async def extract_clip(source: Path, dest: Path, start: float, end: float) -> bool:
+    # -ss before -i: fast seek to nearest keyframe before start.
+    # Re-encode (-c:v libx264) so the output can begin/end on any frame,
+    # not just keyframe boundaries — this is what makes cuts frame-accurate.
+    # -t (duration) is more reliable than -to when combined with fast seek.
+    duration = round(end - start, 6)
     cmd = [
         "ffmpeg", "-y",
         "-ss", str(start),
-        "-to", str(end),
         "-i", str(source),
-        "-c", "copy",
-        "-avoid_negative_ts", "make_zero",
+        "-t", str(duration),
+        "-c:v", "libx264", "-crf", "18", "-preset", "fast",
+        "-c:a", "aac",
         str(dest),
     ]
     proc = await asyncio.create_subprocess_exec(
